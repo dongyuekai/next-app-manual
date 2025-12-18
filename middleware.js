@@ -144,9 +144,24 @@ import { NextResponse } from 'next/server'
 //   }
 // }
 
-export function middleware(request) {
-  return NextResponse.redirect(new URL('/blog/yayu_middleware', request.url))
-}
-export const config = {
-  matcher: '/blog/yayu',
+// export function middleware(request) {
+//   return NextResponse.redirect(new URL('/blog/yayu_middleware', request.url))
+// }
+// export const config = {
+//   matcher: '/blog/yayu',
+// }
+
+// 在下面的设置中，这里实现了除 / docs 和 / blog 作为前缀的路由之外，其他路由都自动添加上尾部斜杠
+const legacyPrefixes = ['/docs', '/blog']
+export default function middleware(req) {
+  const { pathname } = req.nextUrl
+  if (legacyPrefixes.some(prefix => pathname.startsWith(prefix))) {
+    return NextResponse.next()
+  }
+  // 应用尾部斜杠
+  if (!pathname.endsWith('/') &&
+    !pathname.match(/((?!\.well-known(?:\/.*)?)(?:[^/]+\/)*[^/]+\.\w+)/)) {
+    req.nextUrl.pathname += '/'
+    return NextResponse.redirect(req.nextUrl)
+  }
 }
