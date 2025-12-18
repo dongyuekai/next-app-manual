@@ -152,7 +152,7 @@ import { NextResponse } from 'next/server'
 // }
 
 // 在下面的设置中，这里实现了除 / docs 和 / blog 作为前缀的路由之外，其他路由都自动添加上尾部斜杠
-const legacyPrefixes = ['/docs', '/blog']
+const legacyPrefixes = ['/docs', '/blog', '/api']
 export default function middleware(req) {
   const { pathname } = req.nextUrl
   if (legacyPrefixes.some(prefix => pathname.startsWith(prefix))) {
