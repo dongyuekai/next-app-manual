@@ -168,20 +168,51 @@ import { NextResponse } from 'next/server'
 
 
 // 将控制次数的逻辑写在中间件里
-import { RateLimiter } from 'limiter'
+// import { RateLimiter } from 'limiter'
 
-const limiter = new RateLimiter({ tokensPerInterval: 3, interval: 'min', fireImmediately: true })
+// const limiter = new RateLimiter({ tokensPerInterval: 3, interval: 'min', fireImmediately: true })
 
-export async function middleware(request) {
-  const remainingRequests = await limiter.removeTokens(1)
-  if (remainingRequests < 0) {
-    return new NextResponse(
-      JSON.stringify({ success: false, message: 'Too Many Requests2' }),
-      { status: 429, headers: { 'content-type': 'application/json' } }
-    )
+// export async function middleware(request) {
+//   const remainingRequests = await limiter.removeTokens(1)
+//   if (remainingRequests < 0) {
+//     return new NextResponse(
+//       JSON.stringify({ success: false, message: 'Too Many Requests2' }),
+//       { status: 429, headers: { 'content-type': 'application/json' } }
+//     )
+//   }
+//   return NextResponse.next()
+// }
+// export const config = {
+//   matcher: '/api/chat',
+// }
+
+
+// 当项目复杂了，比如在中间件里又要鉴权、又要控制请求、又要国际化等等，
+// 各种逻辑写在一起，中间件很快就变得难以维护。
+// 如果我们要在中间件里实现多个需求，该怎么合理的拆分代码呢
+// 中间件应对多种情况的写法
+function chain(functions, index = 0) {
+  const current = functions[index]
+  if (current) {
+    const next = chain(functions, index + 1)
+    return current(next)
   }
-  return NextResponse.next()
+  return () => NextResponse.next()
 }
+function withMiddleware1(middleware) {
+  return async request => {
+    console.log('middleware1 ' + request.url)
+    return middleware(request)
+  }
+}
+function withMiddleware2(middleware) {
+  return async request => {
+    console.log('middleware2 ' + request.url)
+    return middleware(request)
+  }
+}
+export default chain([withMiddleware1, withMiddleware2])
+
 export const config = {
-  matcher: '/api/chat',
+  matcher: '/api/:path*',
 }
