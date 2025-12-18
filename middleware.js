@@ -152,16 +152,36 @@ import { NextResponse } from 'next/server'
 // }
 
 // 在下面的设置中，这里实现了除 / docs 和 / blog 作为前缀的路由之外，其他路由都自动添加上尾部斜杠
-const legacyPrefixes = ['/docs', '/blog', '/api']
-export default function middleware(req) {
-  const { pathname } = req.nextUrl
-  if (legacyPrefixes.some(prefix => pathname.startsWith(prefix))) {
-    return NextResponse.next()
+// const legacyPrefixes = ['/docs', '/blog', '/api']
+// export default function middleware(req) {
+//   const { pathname } = req.nextUrl
+//   if (legacyPrefixes.some(prefix => pathname.startsWith(prefix))) {
+//     return NextResponse.next()
+//   }
+//   // 应用尾部斜杠
+//   if (!pathname.endsWith('/') &&
+//     !pathname.match(/((?!\.well-known(?:\/.*)?)(?:[^/]+\/)*[^/]+\.\w+)/)) {
+//     req.nextUrl.pathname += '/'
+//     return NextResponse.redirect(req.nextUrl)
+//   }
+// }
+
+
+// 将控制次数的逻辑写在中间件里
+import { RateLimiter } from 'limiter'
+
+const limiter = new RateLimiter({ tokensPerInterval: 3, interval: 'min', fireImmediately: true })
+
+export async function middleware(request) {
+  const remainingRequests = await limiter.removeTokens(1)
+  if (remainingRequests < 0) {
+    return new NextResponse(
+      JSON.stringify({ success: false, message: 'Too Many Requests2' }),
+      { status: 429, headers: { 'content-type': 'application/json' } }
+    )
   }
-  // 应用尾部斜杠
-  if (!pathname.endsWith('/') &&
-    !pathname.match(/((?!\.well-known(?:\/.*)?)(?:[^/]+\/)*[^/]+\.\w+)/)) {
-    req.nextUrl.pathname += '/'
-    return NextResponse.redirect(req.nextUrl)
-  }
+  return NextResponse.next()
+}
+export const config = {
+  matcher: '/api/chat',
 }
