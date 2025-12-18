@@ -34,6 +34,9 @@ module.exports = {
   },
   // 跳过尾部斜杠重定向 当你设置 skipTrailingSlashRedirect为 true 后，假设再次访问 /about/，URL 依然会是 /about/
   skipTrailingSlashRedirect: true,
+  // 设置 skipMiddlewareUrlNormalize为true后，可以获取路由原始的地址，常用于国际化场景中
+  // skipMiddlewareUrlNormalize: true,
+
 }
 
 // 在你的配置中，如果访问 /blog/yayu：
